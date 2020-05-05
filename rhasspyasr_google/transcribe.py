@@ -67,7 +67,6 @@ class GoogleCloudTranscriber(Transcriber):
 
     def _transcribe_wav(self, wav_data: bytes) -> [str, float]:
         """POST to remote server and return response."""
-        headers = {"Content-Type": "audio/wav"}
         _LOGGER.debug(
             "POSTing %d byte(s) of WAV data to Google Cloud STT", len(wav_data)
         )
@@ -96,8 +95,32 @@ class GoogleCloudTranscriber(Transcriber):
             sample_width: int,
             channels: int,
     ) -> typing.Optional[Transcription]:
-        """Speech to text from an audio stream."""
-        raise NotImplementedError('Stream recognition not implemented yet.')
+
+        total_frames = 0
+
+        start_time = time.perf_counter()
+
+        wav_frames = bytearray()
+        for frame in audio_stream:
+            wav_frames.extend(frame)
+            total_frames += 1
+
+        wav_bytes = bytes(wav_frames)
+
+        text, confidence = self._transcribe_wav(wav_bytes)
+
+        transcribe_seconds = time.perf_counter() - start_time
+        _LOGGER.debug("Decoded audio in %s second(s)", transcribe_seconds)
+
+        if text is not None:
+            return Transcription(
+                text=text,
+                likelihood=confidence,
+                transcribe_seconds=transcribe_seconds,
+                wav_seconds=total_frames / float(sample_rate)
+            )
+
+        return None
 
     def stop(self):
         """Stop the transcriber."""

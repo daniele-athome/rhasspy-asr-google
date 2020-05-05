@@ -3,7 +3,9 @@ import argparse
 import dataclasses
 import json
 import logging
+import os
 import sys
+import wave
 from pathlib import Path
 
 from . import GoogleCloudTranscriber
@@ -62,6 +64,12 @@ def get_args() -> argparse.Namespace:
     transcribe_parser.add_argument(
         "--language-code", required=True, help="Language code for Google Cloud STT API"
     )
+    transcribe_parser.add_argument(
+        "--frames-in-chunk",
+        type=int,
+        default=1024,
+        help="Number of frames to process at a time",
+    )
 
     return parser.parse_args()
 
@@ -82,12 +90,42 @@ def transcribe(args: argparse.Namespace):
     )
 
     try:
-        # Transcribe WAV files
-        for wav_path in args.wav_file:
-            _LOGGER.debug("Processing %s", wav_path)
-            wav_bytes = open(wav_path, "rb").read()
-            result = transcriber.transcribe_wav(wav_bytes)
-            print_json(result)
+        if args.wav_file:
+            # Transcribe WAV files
+            for wav_path in args.wav_file:
+                _LOGGER.debug("Processing %s", wav_path)
+                wav_bytes = open(wav_path, "rb").read()
+                result = transcriber.transcribe_wav(wav_bytes)
+                print_json(result)
+        else:
+            # Read WAV data from stdin
+            if os.isatty(sys.stdin.fileno()):
+                print("Reading WAV data from stdin...", file=sys.stderr)
+
+            # Stream in chunks
+            with wave.open(sys.stdin.buffer, "rb") as wav_file:
+
+                def audio_stream(wav_file, frames_in_chunk):
+                    num_frames = wav_file.getnframes()
+                    try:
+                        while num_frames > frames_in_chunk:
+                            yield wav_file.readframes(frames_in_chunk)
+                            num_frames -= frames_in_chunk
+
+                        if num_frames > 0:
+                            # Last chunk
+                            yield wav_file.readframes(num_frames)
+                    except KeyboardInterrupt:
+                        pass
+
+                result = transcriber.transcribe_stream(
+                    audio_stream(wav_file, args.frames_in_chunk),
+                    wav_file.getframerate(),
+                    wav_file.getsampwidth(),
+                    wav_file.getnchannels(),
+                )
+
+                print_json(result)
     except KeyboardInterrupt:
         pass
     finally:
