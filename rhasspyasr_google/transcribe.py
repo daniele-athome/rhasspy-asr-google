@@ -1,4 +1,4 @@
-"""Automated speech recognition in Rhasspy using Pocketsphinx."""
+"""Automated speech recognition in Rhasspy using Google Cloud Speech-to-text."""
 import io
 import logging
 import os
