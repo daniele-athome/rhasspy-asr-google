@@ -13,11 +13,6 @@ python_name="$(basename "${src_dir}" | sed -e 's/-//' | sed -e 's/-/_/g')"
 
 # -----------------------------------------------------------------------------
 
-architecture="$1"
-if [[ -z "${architecture}" ]]; then
-    architecture="$(bash "${src_dir}/architecture.sh")"
-fi
-
 venv="${src_dir}/.venv"
 download="${src_dir}/download"
 
