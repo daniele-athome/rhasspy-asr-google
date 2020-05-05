@@ -4,7 +4,6 @@ PYTHON_NAME = rhasspyasr_google
 PYTHON_FILES = $(PYTHON_NAME)/*.py *.py
 DOWNLOAD_DIR = download
 
-architecture := $(shell bash architecture.sh)
 platform = $(shell sh platform.sh)
 
 .PHONY: reformat check venv dist downloads
