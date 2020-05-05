@@ -52,10 +52,7 @@ def get_args() -> argparse.Namespace:
     transcribe_parser.set_defaults(func=transcribe)
 
     transcribe_parser.add_argument(
-        "wav_file",
-        nargs="*",
-        required=True,
-        help="WAV file(s) to transcribe"
+        "wav_file", nargs="*", help="WAV file(s) to transcribe"
     )
     transcribe_parser.add_argument(
         "--credentials",
@@ -75,7 +72,7 @@ def get_args() -> argparse.Namespace:
 def transcribe(args: argparse.Namespace):
     """Transcribes WAV file(s)"""
     # Load transcriber
-    args.credentials_file = Path(args.credentials_file)
+    args.credentials_file = Path(args.credentials)
     args.language_code = args.language_code
 
     transcriber = GoogleCloudTranscriber(
