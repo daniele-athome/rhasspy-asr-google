@@ -1,13 +1,12 @@
 """Command-line interface to rhasspy-asr-google"""
 import argparse
-import dataclasses
-import json
 import logging
 import os
 import sys
 import wave
 from pathlib import Path
 
+from rhasspyasr import Transcription
 from . import GoogleCloudTranscriber
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +95,7 @@ def transcribe(args: argparse.Namespace):
                 _LOGGER.debug("Processing %s", wav_path)
                 wav_bytes = open(wav_path, "rb").read()
                 result = transcriber.transcribe_wav(wav_bytes)
-                print_json(result)
+                print_result(result)
         else:
             # Read WAV data from stdin
             if os.isatty(sys.stdin.fileno()):
@@ -125,17 +124,16 @@ def transcribe(args: argparse.Namespace):
                     wav_file.getnchannels(),
                 )
 
-                print_json(result)
+                print_result(result)
     except KeyboardInterrupt:
         pass
     finally:
         transcriber.stop()
 
 
-def print_json(result):
-    """Print data class as JSON"""
-    json.dump(dataclasses.asdict(result), sys.stdout)
-    print("")
+def print_result(result: Transcription):
+    if result:
+        print(result.text)
 
 
 # -----------------------------------------------------------------------------
