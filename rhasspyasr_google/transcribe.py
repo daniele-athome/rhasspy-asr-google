@@ -11,7 +11,7 @@ from google.auth import environment_vars
 from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
-from rhasspyasr import Transcriber, Transcription, TranscriptionToken
+from rhasspyasr import Transcriber, Transcription
 
 _LOGGER = logging.getLogger(__name__)
 
